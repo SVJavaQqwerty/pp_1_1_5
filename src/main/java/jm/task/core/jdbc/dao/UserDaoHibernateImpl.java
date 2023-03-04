@@ -1,21 +1,24 @@
 package jm.task.core.jdbc.dao;
-
+import static jm.task.core.jdbc.util.Util.buildSessionFactory;
 import jm.task.core.jdbc.model.User;
-import jm.task.core.jdbc.util.Util;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.query.Query;
+
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import java.util.ArrayList;
 import java.util.List;
 
 public class UserDaoHibernateImpl implements UserDao {
-    private final SessionFactory sessionFactory = Util.getConnection();
+    private final SessionFactory sessionFactory = buildSessionFactory();
 
 
     public UserDaoHibernateImpl() {
-
     }
-
     @Override
     public void createUsersTable() {
         Transaction transaction = null;
@@ -28,8 +31,6 @@ public class UserDaoHibernateImpl implements UserDao {
                     "age TINYINT," +
                     "PRIMARY KEY (id))").executeUpdate();
             transaction.commit();
-            System.out.println("Таблица users создана!");
-            session.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -42,7 +43,6 @@ public class UserDaoHibernateImpl implements UserDao {
             transaction = session.beginTransaction();
             session.createSQLQuery("Drop table if exists users").executeUpdate();
             transaction.commit();
-            System.out.println("Таблица users удалена!");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -53,11 +53,8 @@ public class UserDaoHibernateImpl implements UserDao {
         Transaction transaction = null;
         try (Session session = sessionFactory.openSession()) {
             transaction = session.beginTransaction();
-            session.createSQLQuery("insert into users set name='"+ name +
-                            "', lastName='"+ lastName+ "', age=" + age)
-                    .executeUpdate();
+            session.save(new User(name, lastName, age));
             transaction.commit();
-            System.out.println("Пользователь: " + name + " " + lastName + " добавлен в таблицу");
         } catch (Exception e) {
             if (transaction != null) {
                 transaction.rollback();
@@ -73,7 +70,6 @@ public class UserDaoHibernateImpl implements UserDao {
             transaction = session.beginTransaction();
             session.delete(session.get(User.class, id));
             transaction.commit();
-            System.out.println("Пользователь: " + id + " удален");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -82,9 +78,13 @@ public class UserDaoHibernateImpl implements UserDao {
     @Override
     public List<User> getAllUsers() {
         List<User> list = new ArrayList<>();
-        String sql = "select ID, NAME, LASTNAME, AGE from USERS";
         try (Session session = sessionFactory.openSession()) {
-            list = session.createSQLQuery(sql).addEntity(User.class).list();
+            CriteriaBuilder cb = session.getCriteriaBuilder();
+            CriteriaQuery<User> cq = cb.createQuery(User.class);
+            Root<User> entry = cq.from(User.class);
+            CriteriaQuery<User> all = cq.select(entry);
+            TypedQuery<User> allQuery = session.createQuery(all);
+            list = allQuery.getResultList();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -93,13 +93,10 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void cleanUsersTable() {
-        Transaction transaction = null;
         try(Session session = sessionFactory.openSession()) {
-            transaction = session.beginTransaction();
-            List<User> users = getAllUsers();
-            for (User user : users) session.delete(user);
-            transaction.commit();
-            System.out.println("Таблица очищена");
+            session.beginTransaction();
+            session.createSQLQuery("Truncate Table users").executeUpdate();
+            session.getTransaction().commit();
         } catch (Exception e) {
             e.printStackTrace();
         }

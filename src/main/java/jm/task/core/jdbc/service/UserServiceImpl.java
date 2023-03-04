@@ -11,27 +11,27 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
     UserDao userDao = new UserDaoHibernateImpl();
 
-    public void createUsersTable() throws SQLException, ClassNotFoundException {
+    public void createUsersTable() {
         userDao.createUsersTable();
     }
 
-    public void dropUsersTable() throws SQLException, ClassNotFoundException {
+    public void dropUsersTable() {
         userDao.dropUsersTable();
     }
 
-    public void saveUser(String name, String lastName, byte age) throws SQLException, ClassNotFoundException {
+    public void saveUser(String name, String lastName, byte age) {
         userDao.saveUser(name, lastName, age);
     }
 
-    public void removeUserById(long id) throws SQLException, ClassNotFoundException {
+    public void removeUserById(long id) {
         userDao.removeUserById(id);
     }
 
-    public List<User> getAllUsers() throws SQLException, ClassNotFoundException {
+    public List<User> getAllUsers() {
         return userDao.getAllUsers();
     }
 
-    public void cleanUsersTable() throws SQLException, ClassNotFoundException {
+    public void cleanUsersTable() {
         userDao.cleanUsersTable();
     }
 }

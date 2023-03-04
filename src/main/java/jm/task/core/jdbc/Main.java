@@ -14,19 +14,16 @@ import java.sql.Statement;
 import java.util.List;
 
 public class Main {
-    public static void main(String[] args) {
-        UserDaoHibernateImpl userDaoHibernate = new UserDaoHibernateImpl();
-
-        userDaoHibernate.createUsersTable(); // работает
-        userDaoHibernate.saveUser("Name", "LastName", (byte) 65); // works
-        userDaoHibernate.removeUserById(6); // works
-
-        List<User> users = userDaoHibernate.getAllUsers();
+    public static void main(String[] args) throws SQLException, ClassNotFoundException {
+        UserService userService = new UserServiceImpl();
+        userService.createUsersTable();
+        userService.saveUser("Name", "LastName", (byte) 65);
+        userService.removeUserById(1);
+        List<User> users = userService.getAllUsers();
         for (User user: users) {
             System.out.println(user.toString());
         }
-
-        userDaoHibernate.cleanUsersTable(); // Работает
-        userDaoHibernate.dropUsersTable(); // Работает
+        userService.cleanUsersTable();
+        userService.dropUsersTable();
     }
 }
